@@ -194,3 +194,9 @@ Suggested workflow:
   - run `npm --prefix .opencode run check:multi-team-sync` in CI/pre-commit to prevent drift
   - validate with `npm --prefix .opencode run validate:multi-team`
   - keep `.opencode/opencode.json` aligned with runtime needs
+
+## Support & Sponsoring
+
+If this project helps you, consider supporting it:
+
+- Buy Me a Coffee: https://buymeacoffee.com/alyssonm
