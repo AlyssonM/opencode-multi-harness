@@ -164,13 +164,6 @@ OPENCODE_MULTI_SESSION_DIR=.opencode/crew/dev/sessions \
 opencode
 ```
 
-Se a sessão OAuth do ClickUp estiver quebrada, limpe o cache de auth e tente novamente:
-
-```bash
-rm -rf ~/.mcp-auth
-opencode
-```
-
 Workflow sugerido:
 
 1. Troque para `@orchestrator`.
