@@ -173,8 +173,6 @@ Workflow sugerido:
 
 ## Notas
 
-- Esta branch remove intencionalmente assets legados do runtime Pi.
-- O foco aqui é em primitivas nativas do OpenCode, não em compatibilidade com extensões Pi.
 - Configs source of truth vivem por crew (`.opencode/crew/<crew>/multi-team.yaml`), não na raiz de `.opencode/`.
 - A raiz `.opencode/agents` ainda é necessária como ponto de montagem do runtime ativo para a crew selecionada.
 - O provisionamento de agentes em `.opencode/agents` é feito por cópia (`cpSync`), não por symlink (`ln -s`).

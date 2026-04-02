@@ -173,8 +173,6 @@ Suggested workflow:
 
 ## Notes
 
-- This branch intentionally removes legacy Pi runtime assets.
-- The focus here is OpenCode-native primitives, not Pi extension compatibility.
 - Source of truth configs live per crew (`.opencode/crew/<crew>/multi-team.yaml`), not in `.opencode/` root.
 - Root `.opencode/agents` is still required as active runtime mount point for the selected crew.
 - Agent provisioning in `.opencode/agents` is done by file copy (`cpSync`), not symlink (`ln -s`).
