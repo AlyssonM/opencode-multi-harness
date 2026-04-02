@@ -197,6 +197,10 @@ Suggested workflow:
 
 ## Support & Sponsoring
 
+<p align="center">
+  <img src="./assets/buymeacoffee.png" alt="Buy Me a Coffee" width="100%" />
+</p>
+
 If this project helps you, consider supporting it:
 
 - Buy Me a Coffee: https://buymeacoffee.com/alyssonm
