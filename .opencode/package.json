@@ -2,6 +2,9 @@
   "name": "multi-agents-opencode",
   "private": true,
   "type": "module",
+  "bin": {
+    "ocmh": "bin/ocmh"
+  },
   "scripts": {
     "sync:multi-team": "node scripts/sync-multi-team.mjs",
     "check:multi-team-sync": "node scripts/sync-multi-team.mjs --check",
@@ -9,6 +12,7 @@
     "list:crews": "node scripts/list-crews.mjs",
     "use:crew": "node scripts/use-crew.mjs",
     "clear:crew": "node scripts/clear-crew.mjs",
+    "ocmh:install": "node scripts/install-ocmh.mjs",
     "list:packs": "node scripts/list-crews.mjs",
     "use:pack": "node scripts/use-crew.mjs"
   },

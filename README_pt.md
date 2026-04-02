@@ -86,6 +86,7 @@ O Brave Search MCP usa o pacote oficial `@brave/brave-search-mcp-server`.
 git clone https://github.com/AlyssonM/multi-agents.git
 cd multi-agents
 npm --prefix .opencode install
+npm --prefix .opencode run ocmh:install
 ```
 
 Setup opcional de ambiente:
@@ -110,37 +111,37 @@ fi
 Sincronizar agentes gerados a partir da topologia canônica:
 
 ```bash
-npm --prefix .opencode run sync:multi-team
+ocmh sync
 ```
 
 Validar topologia e referências:
 
 ```bash
-npm --prefix .opencode run validate:multi-team
+ocmh validate
 ```
 
 Verificar drift (CI-friendly, sem escrita):
 
 ```bash
-npm --prefix .opencode run check:multi-team-sync
+ocmh check:sync
 ```
 
 Listar crews disponíveis do harness:
 
 ```bash
-npm --prefix .opencode run list:crews
+ocmh list:crews
 ```
 
 Ativar uma crew (exemplo: `marketing`):
 
 ```bash
-npm --prefix .opencode run use:crew -- marketing
+ocmh use marketing
 ```
 
 Limpar seleção da crew ativa (desprovisionar agentes de runtime):
 
 ```bash
-npm --prefix .opencode run clear:crew
+ocmh clear
 ```
 
 Iniciar OpenCode:
@@ -191,14 +192,14 @@ Workflow sugerido:
 - A exportação é desabilitada por padrão e só roda com `OPENCODE_MULTI_SESSION_EXPORT=1`.
 - Seleção multi-crew do harness:
   - pastas de crew suportadas em `.opencode/crew/<crew>/`
-  - ative via `npm --prefix .opencode run use:crew -- <crew>`
+  - ative via `ocmh use <crew>`
   - `sync`/`validate` podem mirar config custom via `--config`, `OPENCODE_MULTI_CREW_CONFIG` ou `OPENCODE_MULTI_CONFIG`
 - Estratégia de autoria:
   - trate `.opencode/crew/<crew>/multi-team.yaml` como source-of-truth
-  - ative a crew alvo com `npm --prefix .opencode run use:crew -- <crew>`
-  - execute `npm --prefix .opencode run sync:multi-team` após mudanças de topologia
-  - execute `npm --prefix .opencode run check:multi-team-sync` em CI/pre-commit para evitar drift
-  - valide com `npm --prefix .opencode run validate:multi-team`
+  - ative a crew alvo com `ocmh use <crew>`
+  - execute `ocmh sync` após mudanças de topologia
+  - execute `ocmh check:sync` em CI/pre-commit para evitar drift
+  - valide com `ocmh validate`
   - mantenha `.opencode/opencode.json` alinhado com as necessidades de runtime
 
 ## Support & Sponsoring

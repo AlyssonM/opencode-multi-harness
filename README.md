@@ -86,6 +86,7 @@ Brave Search MCP uses the official package `@brave/brave-search-mcp-server`.
 git clone https://github.com/AlyssonM/multi-agents.git
 cd multi-agents
 npm --prefix .opencode install
+npm --prefix .opencode run ocmh:install
 ```
 
 Optional environment setup:
@@ -110,37 +111,37 @@ fi
 Sync generated agents from canonical topology:
 
 ```bash
-npm --prefix .opencode run sync:multi-team
+ocmh sync
 ```
 
 Validate topology and references:
 
 ```bash
-npm --prefix .opencode run validate:multi-team
+ocmh validate
 ```
 
 Check drift (CI-friendly, no writes):
 
 ```bash
-npm --prefix .opencode run check:multi-team-sync
+ocmh check:sync
 ```
 
 List available harness crews:
 
 ```bash
-npm --prefix .opencode run list:crews
+ocmh list:crews
 ```
 
 Activate a crew (example: `marketing`):
 
 ```bash
-npm --prefix .opencode run use:crew -- marketing
+ocmh use marketing
 ```
 
 Clear active crew selection (deprovision runtime agents):
 
 ```bash
-npm --prefix .opencode run clear:crew
+ocmh clear
 ```
 
 Start OpenCode:
@@ -191,14 +192,14 @@ Suggested workflow:
 - Export is disabled by default and only runs with `OPENCODE_MULTI_SESSION_EXPORT=1`.
 - Multi-crew harness selection:
   - crew folders supported at `.opencode/crew/<crew>/`
-  - activate via `npm --prefix .opencode run use:crew -- <crew>`
+  - activate via `ocmh use <crew>`
   - `sync`/`validate` can target custom config via `--config`, `OPENCODE_MULTI_CREW_CONFIG` or `OPENCODE_MULTI_CONFIG`
 - Authoring strategy:
   - treat `.opencode/crew/<crew>/multi-team.yaml` as source-of-truth
-  - activate target crew with `npm --prefix .opencode run use:crew -- <crew>`
-  - run `npm --prefix .opencode run sync:multi-team` after topology changes
-  - run `npm --prefix .opencode run check:multi-team-sync` in CI/pre-commit to prevent drift
-  - validate with `npm --prefix .opencode run validate:multi-team`
+  - activate target crew with `ocmh use <crew>`
+  - run `ocmh sync` after topology changes
+  - run `ocmh check:sync` in CI/pre-commit to prevent drift
+  - validate with `ocmh validate`
   - keep `.opencode/opencode.json` aligned with runtime needs
 
 ## Support & Sponsoring

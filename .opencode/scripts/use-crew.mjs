@@ -93,7 +93,7 @@ function main() {
   const crewArg = process.argv[2]
 
   if (!crewArg) {
-    console.log("Usage: npm --prefix .opencode run use:crew -- <crew>")
+    console.log("Usage: ocmh use <crew>")
     console.log("")
     console.log("Available crews:")
     for (const crew of crews) console.log(`- ${crew.name}`)
@@ -174,8 +174,8 @@ function main() {
   console.log("")
   console.log("Next:")
   const suggestedSessionDir = path.relative(repoRoot, path.join(selected.root, "sessions"))
-  console.log("- npm --prefix .opencode run validate:multi-team")
-  console.log("- npm --prefix .opencode run check:multi-team-sync")
+  console.log("- ocmh validate")
+  console.log("- ocmh check:sync")
   console.log(`- OPENCODE_MULTI_SESSION_EXPORT=1 OPENCODE_MULTI_SESSION_DIR=${suggestedSessionDir} opencode`)
 }
 

@@ -272,7 +272,7 @@ function main() {
 
   if (checkOnly) {
     if (drift) {
-      console.log("multi-team sync check failed: run `npm --prefix .opencode run sync:multi-team`")
+      console.log("multi-team sync check failed: run `ocmh sync`")
       process.exitCode = 1
       return
     }
