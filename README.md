@@ -1,3 +1,9 @@
+<p align="center">
+  <img src="./assets/banner_opencode.png" alt="OpenCode Multi-Team Harness" width="100%" />
+</p>
+
+[![](https://img.shields.io/badge/%F0%9F%87%A7%F0%9F%87%B7-README%20PT--BR-009C3B?style=flat)](README_pt.md)
+
 # OpenCode Multi-Team Harness
 
 This branch contains an OpenCode-native multi-team scaffold focused on hierarchical delegation:
