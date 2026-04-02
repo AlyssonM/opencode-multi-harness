@@ -1,0 +1,355 @@
+version: 1
+name: opencode-multi-team-marketing
+description: >
+  OpenCode multi-team topology for Hivehue's marketing and social media
+  operations.
+
+runtime:
+  harness: opencode
+  source_of_truth: .opencode/crew/marketing/multi-team.yaml
+  validation_command: npm --prefix .opencode run validate:multi-team
+
+shared:
+  skills:
+    - path: .opencode/skills/delegate-bounded/SKILL.md
+      use_when: Delegate one bounded outcome to a lead or worker.
+    - path: .opencode/skills/zero-micromanagement/SKILL.md
+      use_when: Assign outcomes and constraints without prescribing keystrokes.
+    - path: .opencode/skills/mental-model/SKILL.md
+      use_when: Read/update durable expertise before and after meaningful work.
+    - path: .opencode/skills/web-research/SKILL.md
+      use_when: When decisions require current external evidence from web sources.
+  tools:
+    - update-mental-model
+  mcp:
+    - context7
+    - brave-search
+    - firecrawl
+
+orchestrator:
+  id: orchestrator
+  role: ceo
+  model: openai/gpt-5.2
+  agent_file: .opencode/crew/marketing/agents/orchestrator.md
+  expertise:
+    path: .opencode/crew/marketing/expertise/orchestrator-mental-model.yaml
+    use_when: Capture brand-level coordination, priority tradeoffs, and routing decisions.
+  skills:
+    - path: .opencode/skills/delegate-bounded/SKILL.md
+      use_when: Always, before every Task delegation.
+    - path: .opencode/skills/zero-micromanagement/SKILL.md
+      use_when: Always, for lead handoffs.
+    - path: .opencode/skills/mental-model/SKILL.md
+      use_when: At task boundaries to preserve durable learnings.
+    - path: .opencode/skills/web-research/SKILL.md
+      use_when: When routing decisions depend on up-to-date market/platform evidence.
+  tools:
+    - task
+    - update-mental-model
+  mcp_access:
+    - context7
+    - brave-search
+    - firecrawl
+  routes_to:
+    - planning-lead
+    - creative-lead
+    - validation-lead
+  domain:
+    - path: .
+      read: true
+      edit: false
+      bash: false
+
+teams:
+  - name: Planning
+    lead:
+      id: planning-lead
+      role: lead
+      model: openai/gpt-5.2
+      agent_file: .opencode/crew/marketing/agents/planning-lead.md
+      expertise:
+        path: .opencode/crew/marketing/expertise/planning-lead-mental-model.yaml
+        use_when: Store positioning notes, audience hypotheses, and campaign scoping decisions.
+      skills:
+        - path: .opencode/skills/delegate-bounded/SKILL.md
+          use_when: For every worker assignment.
+        - path: .opencode/skills/zero-micromanagement/SKILL.md
+          use_when: While framing research and strategy work.
+        - path: .opencode/skills/mental-model/SKILL.md
+          use_when: Start and end of planning cycles.
+        - path: .opencode/skills/web-research/SKILL.md
+          use_when: While evaluating external channels, trends, and benchmarks.
+      tools:
+        - task
+        - update-mental-model
+      mcp_access:
+        - context7
+        - brave-search
+        - firecrawl
+      routes_to:
+        - market-researcher
+        - campaign-strategist
+      domain:
+        - path: .
+          read: true
+          edit: false
+          bash: false
+    members:
+      - id: market-researcher
+        role: worker
+        model: zai/glm-5-turbo
+        agent_file: .opencode/crew/marketing/agents/market-researcher.md
+        expertise:
+          path: .opencode/crew/marketing/expertise/market-researcher-mental-model.yaml
+          use_when: Capture audience insights, competitor patterns, and channel opportunities.
+        skills:
+          - path: .opencode/skills/mental-model/SKILL.md
+            use_when: Before and after research tasks.
+          - path: .opencode/skills/web-research/SKILL.md
+            use_when: For evidence-based web discovery and source extraction.
+        tools:
+          - read
+          - grep
+          - glob
+          - list
+          - update-mental-model
+        mcp_access:
+          - context7
+          - brave-search
+          - firecrawl
+        domain:
+          - path: .
+            read: true
+            edit: false
+            bash: false
+          - path: specs/marketing/
+            read: true
+            edit: false
+            bash: false
+      - id: campaign-strategist
+        role: worker
+        model: zai/glm-5-turbo
+        agent_file: .opencode/crew/marketing/agents/campaign-strategist.md
+        expertise:
+          path: .opencode/crew/marketing/expertise/campaign-strategist-mental-model.yaml
+          use_when: Store campaign architecture, messaging pillars, and channel sequencing.
+        skills:
+          - path: .opencode/skills/mental-model/SKILL.md
+            use_when: Before and after campaign strategy work.
+          - path: .opencode/skills/web-research/SKILL.md
+            use_when: When channel strategy needs current external validation.
+        tools:
+          - read
+          - grep
+          - glob
+          - list
+          - edit
+          - update-mental-model
+        mcp_access:
+          - context7
+          - brave-search
+          - firecrawl
+        domain:
+          - path: .
+            read: true
+            edit: false
+            bash: false
+          - path: specs/marketing/
+            read: true
+            edit: true
+            bash: false
+
+  - name: Creative
+    lead:
+      id: creative-lead
+      role: lead
+      model: openai/gpt-5.2
+      agent_file: .opencode/crew/marketing/agents/creative-lead.md
+      expertise:
+        path: .opencode/crew/marketing/expertise/creative-lead-mental-model.yaml
+        use_when: Track narrative direction, production tradeoffs, and delivery quality.
+      skills:
+        - path: .opencode/skills/delegate-bounded/SKILL.md
+          use_when: For every creative assignment.
+        - path: .opencode/skills/zero-micromanagement/SKILL.md
+          use_when: While assigning copy and creative production.
+        - path: .opencode/skills/mental-model/SKILL.md
+          use_when: Start and end of creative rounds.
+      tools:
+        - task
+        - update-mental-model
+      mcp_access:
+        - context7
+        - brave-search
+        - firecrawl
+      routes_to:
+        - copywriter
+        - creative-strategist
+        - media-operator
+      domain:
+        - path: .
+          read: true
+          edit: false
+          bash: false
+    members:
+      - id: copywriter
+        role: worker
+        model: zai/glm-5-turbo
+        agent_file: .opencode/crew/marketing/agents/copywriter.md
+        expertise:
+          path: .opencode/crew/marketing/expertise/copywriter-mental-model.yaml
+          use_when: Save voice, hooks, CTA patterns, and high-performing message variants.
+        skills:
+          - path: .opencode/skills/mental-model/SKILL.md
+            use_when: Before and after copywriting tasks.
+        tools:
+          - read
+          - grep
+          - glob
+          - list
+          - edit
+          - update-mental-model
+        domain:
+          - path: .
+            read: true
+            edit: false
+            bash: false
+          - path: campaigns/copy/
+            read: true
+            edit: true
+            bash: false
+      - id: creative-strategist
+        role: worker
+        model: zai/glm-5-turbo
+        agent_file: .opencode/crew/marketing/agents/creative-strategist.md
+        expertise:
+          path: .opencode/crew/marketing/expertise/creative-strategist-mental-model.yaml
+          use_when: Preserve concept systems, visual direction, and content formats.
+        skills:
+          - path: .opencode/skills/mental-model/SKILL.md
+            use_when: Before and after creative planning.
+        tools:
+          - read
+          - grep
+          - glob
+          - list
+          - edit
+          - update-mental-model
+        domain:
+          - path: .
+            read: true
+            edit: false
+            bash: false
+          - path: campaigns/creative/
+            read: true
+            edit: true
+            bash: false
+      - id: media-operator
+        role: worker
+        model: zai/glm-5-turbo
+        agent_file: .opencode/crew/marketing/agents/media-operator.md
+        expertise:
+          path: .opencode/crew/marketing/expertise/media-operator-mental-model.yaml
+          use_when: Record publishing workflows, channel notes, and operational constraints.
+        skills:
+          - path: .opencode/skills/mental-model/SKILL.md
+            use_when: Before and after media operations tasks.
+        tools:
+          - read
+          - grep
+          - glob
+          - list
+          - edit
+          - update-mental-model
+        domain:
+          - path: .
+            read: true
+            edit: false
+            bash: false
+          - path: campaigns/media/
+            read: true
+            edit: true
+            bash: false
+
+  - name: Validation
+    lead:
+      id: validation-lead
+      role: lead
+      model: openai/gpt-5.2
+      agent_file: .opencode/crew/marketing/agents/validation-lead.md
+      expertise:
+        path: .opencode/crew/marketing/expertise/validation-lead-mental-model.yaml
+        use_when: Track performance risks, brand safety issues, and rollout readiness.
+      skills:
+        - path: .opencode/skills/delegate-bounded/SKILL.md
+          use_when: For QA and risk review task splitting.
+        - path: .opencode/skills/zero-micromanagement/SKILL.md
+          use_when: While defining validation criteria.
+        - path: .opencode/skills/mental-model/SKILL.md
+          use_when: Start and end of validation rounds.
+        - path: .opencode/skills/web-research/SKILL.md
+          use_when: When validation requires external benchmark or policy checks.
+      tools:
+        - task
+        - update-mental-model
+      mcp_access:
+        - context7
+        - brave-search
+        - firecrawl
+      routes_to:
+        - performance-analyst
+        - brand-safety-reviewer
+      domain:
+        - path: .
+          read: true
+          edit: false
+          bash: false
+    members:
+      - id: performance-analyst
+        role: worker
+        model: zai/glm-5-turbo
+        agent_file: .opencode/crew/marketing/agents/performance-analyst.md
+        expertise:
+          path: .opencode/crew/marketing/expertise/performance-analyst-mental-model.yaml
+          use_when: Save metrics interpretation patterns and optimization hypotheses.
+        skills:
+          - path: .opencode/skills/mental-model/SKILL.md
+            use_when: Before and after performance review.
+          - path: .opencode/skills/web-research/SKILL.md
+            use_when: For external benchmark and distribution performance baselines.
+        tools:
+          - read
+          - grep
+          - glob
+          - list
+          - update-mental-model
+        mcp_access:
+          - context7
+          - brave-search
+          - firecrawl
+        domain:
+          - path: .
+            read: true
+            edit: false
+            bash: false
+      - id: brand-safety-reviewer
+        role: worker
+        model: zai/glm-5-turbo
+        agent_file: .opencode/crew/marketing/agents/brand-safety-reviewer.md
+        expertise:
+          path: .opencode/crew/marketing/expertise/brand-safety-reviewer-mental-model.yaml
+          use_when: Store brand risk patterns, compliance checks, and escalation cues.
+        skills:
+          - path: .opencode/skills/mental-model/SKILL.md
+            use_when: Before and after brand safety review.
+        tools:
+          - read
+          - grep
+          - glob
+          - list
+          - update-mental-model
+        domain:
+          - path: .
+            read: true
+            edit: false
+            bash: false

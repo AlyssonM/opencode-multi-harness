@@ -1,0 +1,27 @@
+node_modules/
+__pycache__/
+*.pyc
+.DS_Store
+*.swp
+*.swo
+
+# Local credentials
+.env
+
+# Runtime/session artifacts
+.pi/
+.opencode/**/sessions/**
+!.opencode/**/sessions/
+!.opencode/**/sessions/.gitkeep
+
+# Active runtime materialized files (selected via use:crew)
+.opencode/.active-crew.json
+.opencode/agents/*.md
+!.opencode/agents/.gitkeep
+
+tmp/
+.playwright-cli/
+
+# Crew-specific specs (keep only top-level plan versioned)
+specs/*/
+specs/*/**
