@@ -18,6 +18,7 @@ const COMMANDS = {
   use: 'use-crew.mjs',
   'clear:crew': 'clear-crew.mjs',
   clear: 'clear-crew.mjs',
+  doctor: 'doctor.mjs',
   sync: 'sync-multi-team.mjs',
   'check:sync': 'sync-multi-team.mjs',
   validate: 'validate-multi-team.mjs',
@@ -36,6 +37,7 @@ function printHelp() {
   console.log('  ocmh check:sync');
   console.log('  ocmh validate');
   console.log('  ocmh clear');
+  console.log('  ocmh doctor');
   console.log('');
   console.log('Examples:');
   console.log('  ocmh list:crews');
@@ -45,6 +47,7 @@ function printHelp() {
   console.log('  ocmh sync');
   console.log('  ocmh check:sync');
   console.log('  ocmh validate');
+  console.log('  ocmh doctor');
 }
 
 function runScript(scriptFile, args) {

@@ -1,11 +1,14 @@
 import { existsSync, readdirSync, statSync, unlinkSync } from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
+import { resolveRepoRoot, resolveRuntimeRoot } from "./lib/runtime.mjs"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
-const opencodeRoot = path.resolve(__dirname, "..")
-const repoRoot = path.resolve(opencodeRoot, "..")
+const scriptRuntimeRoot = path.resolve(__dirname, "..")
+const defaultRepoRoot = path.resolve(scriptRuntimeRoot, "..")
+const opencodeRoot = resolveRuntimeRoot(defaultRepoRoot)
+const repoRoot = resolveRepoRoot(opencodeRoot)
 
 const ACTIVE_AGENTS_DIR = path.join(opencodeRoot, "agents")
 const ACTIVE_CREW_META_PATH = path.join(opencodeRoot, ".active-crew.json")

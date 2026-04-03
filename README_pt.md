@@ -126,6 +126,12 @@ Verificar drift (CI-friendly, sem escrita):
 ocmh check:sync
 ```
 
+Executar diagnóstico do ambiente:
+
+```bash
+ocmh doctor
+```
+
 Listar crews disponíveis do harness:
 
 ```bash
@@ -171,6 +177,26 @@ Workflow sugerido:
 3. Confirme se o caminho de delegação respeita `permission.task`.
 4. Peça para um agente persistir um insight durável via `update-mental-model`.
 
+## Troubleshooting Rápido
+
+Mostrar help da CLI:
+
+```bash
+ocmh --help
+```
+
+Executar o diagnóstico do runtime:
+
+```bash
+ocmh doctor
+```
+
+Validar sem materializar mudanças de runtime:
+
+```bash
+ocmh validate --config .opencode/crew/dev/multi-team.yaml
+```
+
 ## Notas
 
 - Configs source of truth vivem por crew (`.opencode/crew/<crew>/multi-team.yaml`), não na raiz de `.opencode/`.
@@ -191,7 +217,21 @@ Workflow sugerido:
   - execute `ocmh sync` após mudanças de topologia
   - execute `ocmh check:sync` em CI/pre-commit para evitar drift
   - valide com `ocmh validate`
-  - mantenha `.opencode/opencode.json` alinhado com as necessidades de runtime
+- mantenha `.opencode/opencode.json` alinhado com as necessidades de runtime
+
+## Checks de Contribuição
+
+Validar arquivos do runtime:
+
+```bash
+npm --prefix .opencode run check:runtime
+```
+
+Executar smoke tests:
+
+```bash
+npm --prefix .opencode run test:smoke
+```
 
 ## Support & Sponsoring
 

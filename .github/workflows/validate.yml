@@ -1,0 +1,37 @@
+name: Validate
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: .opencode/package-lock.json
+
+      - name: Install runtime dependencies
+        run: npm --prefix .opencode install
+
+      - name: Check runtime
+        run: npm --prefix .opencode run check:runtime
+
+      - name: Doctor
+        run: npm --prefix .opencode run doctor -- --ci
+
+      - name: Validate topology
+        run: npm --prefix .opencode run validate:multi-team
+
+      - name: Check generated agent drift
+        run: npm --prefix .opencode run check:multi-team-sync
+
+      - name: Run smoke tests
+        run: npm --prefix .opencode run test:smoke

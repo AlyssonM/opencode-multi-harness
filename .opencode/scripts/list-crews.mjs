@@ -1,11 +1,14 @@
 import { existsSync, readdirSync, statSync } from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
+import { resolveRepoRoot, resolveRuntimeRoot } from "./lib/runtime.mjs"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
-const opencodeRoot = path.resolve(__dirname, "..")
-const repoRoot = path.resolve(opencodeRoot, "..")
+const scriptRuntimeRoot = path.resolve(__dirname, "..")
+const defaultRepoRoot = path.resolve(scriptRuntimeRoot, "..")
+const opencodeRoot = resolveRuntimeRoot(defaultRepoRoot)
+const repoRoot = resolveRepoRoot(opencodeRoot)
 const crewRoot = path.join(opencodeRoot, "crew")
 
 function safeDirectoryEntries(dirPath) {
