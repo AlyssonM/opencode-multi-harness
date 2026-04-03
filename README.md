@@ -16,6 +16,19 @@ This branch contains an OpenCode-native multi-team scaffold focused on hierarchi
 
 The objective is to run a controlled multi-agent workflow in OpenCode with explicit task boundaries, durable expertise, and optional MCP integration.
 
+## Differences Between OpenCode and OpenCode Multi-Team Harness
+
+| Area | Plain OpenCode | OpenCode Multi-Team Harness |
+| --- | --- | --- |
+| Session model | Single interactive runtime | Hierarchical runtime with `orchestrator -> leads -> workers` |
+| Agent topology | Manual or ad hoc | Canonical crew topology in `.opencode/crew/<crew>/multi-team.yaml` |
+| Active agents | Whatever is loaded in the current session | Materialized runtime agents via `ocmh use <crew>` |
+| Delegation rules | Prompt discipline only | Enforced through per-agent `permission.task` frontmatter |
+| Ownership | Implicit | Explicit `domain`, `tools`, `mcp_access`, and expertise per agent |
+| Validation | Manual | `ocmh validate`, `ocmh check:sync`, `ocmh doctor`, smoke tests |
+| Sync model | No canonical topology workflow | Source-of-truth topology plus runtime materialization in `.opencode/agents/` |
+| Repeatability | Depends on operator discipline | Re-runnable crew definitions with predictable active-agent provisioning |
+
 ## Repository Layout
 
 - [`.opencode/crew/dev/multi-team.yaml`](./.opencode/crew/dev/multi-team.yaml)  
