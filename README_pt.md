@@ -224,13 +224,13 @@ ocmh validate --config .opencode/crew/dev/multi-team.yaml
 Validar arquivos do runtime:
 
 ```bash
-npm --prefix .opencode run check:runtime
+ocmh check:runtime
 ```
 
 Executar smoke tests:
 
 ```bash
-npm --prefix .opencode run test:smoke
+ocmh test:smoke
 ```
 
 ## Support & Sponsoring
