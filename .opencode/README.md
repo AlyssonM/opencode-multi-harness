@@ -85,7 +85,7 @@ Clear active crew selection (deprovision runtime agents):
 npm --prefix .opencode run clear:crew
 ```
 
-The command materializes active files into:
+The command provisions active runtime links into:
 
 - `.opencode/agents/*.md`
 - `.opencode/.active-crew.json`
@@ -141,6 +141,6 @@ Recommended start:
   - run `npm --prefix .opencode run validate:multi-team`
   - keep `opencode.json` aligned as runtime artifact
 - Root `agents/` is the runtime mount point and should remain present (at least with `.gitkeep`).
-- Runtime `agents/` files are provisioned by copy (`cpSync`), not symlink.
+- Runtime `agents/` files are provisioned by symlink.
 - `update-mental-model` writes to crew expertise by default (active crew config first), with fallback to legacy `.opencode/expertise/`.
 - Default OpenCode storage remains in `~/.local/share/opencode/`.

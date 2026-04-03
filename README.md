@@ -40,7 +40,7 @@ The objective is to run a controlled multi-agent workflow in OpenCode with expli
 - [`opencode.example.json`](./opencode.example.json)  
   OpenCode config template for MCP/permission bootstrap.
 - [`.opencode/agents/`](./.opencode/agents)  
-  Active runtime agents (materialized by `use:crew`, ignored in git except `.gitkeep`).
+  Active runtime agents (symlinked by `use:crew`, ignored in git except `.gitkeep`).
 - [`.opencode/crew/dev/agents/`](./.opencode/crew/dev/agents)  
   Canonical agents for dev crew.
 - [`.opencode/skills/`](./.opencode/skills)  
@@ -216,7 +216,7 @@ ocmh validate --config .opencode/crew/dev/multi-team.yaml
 
 - Source of truth configs live per crew (`.opencode/crew/<crew>/multi-team.yaml`), not in `.opencode/` root.
 - Root `.opencode/agents` is still required as active runtime mount point for the selected crew.
-- Agent provisioning in `.opencode/agents` is done by file copy (`cpSync`), not symlink (`ln -s`).
+- Agent provisioning in `.opencode/agents` is done by symlink, so runtime agents stay aligned with the canonical crew prompt files.
 - Optional session export plugin (`.opencode/plugins/session-export.ts`) writes:
   - default per active crew: `.opencode/crew/<crew>/sessions/<session-id>/...`
   - child: `.opencode/crew/<crew>/sessions/<root-session-id>/children/<child-session-id>/...`

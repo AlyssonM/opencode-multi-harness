@@ -38,7 +38,7 @@ O objetivo é executar um fluxo multi-agent controlado no OpenCode, com fronteir
 - [`opencode.example.json`](./opencode.example.json)  
   Template de config do OpenCode para bootstrap de MCP/permissões.
 - [`.opencode/agents/`](./.opencode/agents)  
-  Agentes ativos de runtime (materializados por `use:crew`, ignorados no git exceto `.gitkeep`).
+  Agentes ativos de runtime (linkados por `use:crew`, ignorados no git exceto `.gitkeep`).
 - [`.opencode/crew/dev/agents/`](./.opencode/crew/dev/agents)  
   Agentes canônicos da crew de dev.
 - [`.opencode/skills/`](./.opencode/skills)  
@@ -214,7 +214,7 @@ ocmh validate --config .opencode/crew/dev/multi-team.yaml
 
 - Configs source of truth vivem por crew (`.opencode/crew/<crew>/multi-team.yaml`), não na raiz de `.opencode/`.
 - A raiz `.opencode/agents` ainda é necessária como ponto de montagem do runtime ativo para a crew selecionada.
-- O provisionamento de agentes em `.opencode/agents` é feito por cópia (`cpSync`), não por symlink (`ln -s`).
+- O provisionamento de agentes em `.opencode/agents` é feito por symlink, mantendo o runtime alinhado aos prompts canônicos da crew.
 - O plugin opcional de exportação de sessão (`.opencode/plugins/session-export.ts`) escreve:
   - padrão por crew ativa: `.opencode/crew/<crew>/sessions/<session-id>/...`
   - child: `.opencode/crew/<crew>/sessions/<root-session-id>/children/<child-session-id>/...`

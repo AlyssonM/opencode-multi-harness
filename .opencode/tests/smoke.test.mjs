@@ -1,6 +1,6 @@
 import test from "node:test"
 import assert from "node:assert/strict"
-import { cpSync, existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs"
+import { cpSync, existsSync, lstatSync, mkdtempSync, readFileSync, readdirSync, readlinkSync, rmSync } from "node:fs"
 import os from "node:os"
 import path from "node:path"
 import { spawnSync } from "node:child_process"
@@ -62,7 +62,7 @@ test("ocmh list:crews reports available crews", (t) => {
   assert.match(result.stdout, /marketing/)
 })
 
-test("ocmh use materializes active crew metadata and agents", (t) => {
+test("ocmh use symlinks active crew metadata and agents", (t) => {
   const fixture = createFixture(t)
   const result = runOcmh(["use", "marketing"], fixtureEnv(fixture))
 
@@ -77,6 +77,10 @@ test("ocmh use materializes active crew metadata and agents", (t) => {
   const activeAgentsDir = path.join(fixture.fixtureRuntimeRoot, "agents")
   const agents = readdirSync(activeAgentsDir).filter((entry) => entry.endsWith(".md"))
   assert.ok(agents.length > 0)
+  const activeAgentPath = path.join(activeAgentsDir, agents[0])
+  assert.equal(lstatSync(activeAgentPath).isSymbolicLink(), true)
+  const linkTarget = readlinkSync(activeAgentPath)
+  assert.ok(linkTarget.includes(path.join("crew", "marketing", "agents")))
 })
 
 test("ocmh validate works against an explicit fixture config", (t) => {

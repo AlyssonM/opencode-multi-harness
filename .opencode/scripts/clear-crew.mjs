@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, statSync, unlinkSync } from "node:fs"
+import { existsSync, lstatSync, readdirSync, unlinkSync } from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { resolveRepoRoot, resolveRuntimeRoot } from "./lib/runtime.mjs"
@@ -19,7 +19,8 @@ function clearActiveAgents() {
   let removed = 0
   for (const entry of readdirSync(ACTIVE_AGENTS_DIR)) {
     const abs = path.join(ACTIVE_AGENTS_DIR, entry)
-    if (!statSync(abs).isFile()) continue
+    const stat = lstatSync(abs)
+    if (!stat.isFile() && !stat.isSymbolicLink()) continue
     if (!entry.endsWith(".md")) continue
     unlinkSync(abs)
     removed += 1
