@@ -3,6 +3,8 @@
 </p>
 
 [![](https://img.shields.io/badge/%F0%9F%87%A7%F0%9F%87%B7-README%20PT--BR-009C3B?style=flat)](README_pt.md)
+[![](https://img.shields.io/github/last-commit/AlyssonM/opencode-multi-harness?style=flat)](https://github.com/AlyssonM/opencode-multi-harness/commits)
+[![](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-support-FFDD00?style=flat&logo=buy-me-a-coffee&logoColor=000000)](https://buymeacoffee.com/alyssonm)
 
 # OpenCode Multi-Team Harness
 

@@ -12,7 +12,7 @@ Use this skill when the user provides goals and desired scopes and wants a ready
 - initial expertise files
 - sensible tool/domain defaults
 
-This skill is portable in spirit (Markdown + plain files), but this version is optimized for OpenCode conventions.
+This skill is portable in spirit (Markdown + plain files), but this version is optimized for the OpenCode multi-team harness conventions.
 
 ## Minimal Input Spec
 
@@ -60,6 +60,8 @@ Always generate:
 4. one or more worker prompts per team/workstream
 5. `.opencode/crew/<crew>/expertise/*-mental-model.yaml` for every generated agent
 
+The active runtime agents under `.opencode/agents/` are materialized later by `ocmh use <crew>`. Do not treat `.opencode/agents/` as the source of truth when generating a new crew.
+
 ## Team Topology Rules
 
 Always produce 3 layers:
@@ -105,7 +107,7 @@ Use OpenCode tool names and permission model semantics:
 - Document/spec/content workers: add `edit`
 - Code/script execution workers: add `bash`
 
-Avoid `write`, `find`, `ls`, `delegate_agent`, `update_mental_model` in OpenCode output (legacy Pi naming).
+Avoid `write`, `find`, `ls`, `delegate_agent`, `update_mental_model` in OpenCode output.
 
 ## MCP Inference Rules (OpenCode)
 
@@ -207,7 +209,8 @@ open_questions: []
 
 Output is acceptable only if:
 
-- it can run in OpenCode with `opencode` after selecting/generated agents
+- it validates with `ocmh validate --config .opencode/crew/<crew>/multi-team.yaml`
+- it can be activated with `ocmh use <crew>`
 - no worker has `edit/bash` outside owned scope
 - leads do not get direct `edit/bash` by default
 - prompts clearly match selected profile and goals
