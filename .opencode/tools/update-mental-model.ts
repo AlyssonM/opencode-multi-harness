@@ -14,20 +14,6 @@ type ExpertiseDoc = {
 
 const DEFAULT_MAX_LINES = 10000
 const NOTE_MAX_CHARS = 1000
-const ACTIVE_CREW_META_PATH = path.join(".opencode", ".active-crew.json")
-
-type MultiTeamAgent = {
-  id?: string
-  expertise?: { path?: string }
-}
-type MultiTeamTeam = {
-  lead?: MultiTeamAgent
-  members?: MultiTeamAgent[]
-}
-type MultiTeamDoc = {
-  orchestrator?: MultiTeamAgent
-  teams?: MultiTeamTeam[]
-}
 
 function today(): string {
   return new Date().toISOString().slice(0, 10)
@@ -55,60 +41,6 @@ function lineCount(text: string): number {
   return text.split("\n").length
 }
 
-function resolveFromRoot(root: string, filePath: string): string {
-  if (path.isAbsolute(filePath)) return filePath
-  return path.resolve(root, filePath)
-}
-
-function resolvePathFromCrewConfig(root: string, agent: string): string | undefined {
-  const metaPath = path.join(root, ACTIVE_CREW_META_PATH)
-  if (!existsSync(metaPath)) return undefined
-
-  try {
-    const active = JSON.parse(readFileSync(metaPath, "utf-8")) as { source_config?: unknown }
-    if (typeof active.source_config !== "string" || !active.source_config.trim()) return undefined
-
-    const configPath = resolveFromRoot(root, active.source_config)
-    if (!existsSync(configPath)) return undefined
-
-    const doc = YAML.parse(readFileSync(configPath, "utf-8")) as MultiTeamDoc
-    const candidates: MultiTeamAgent[] = []
-    if (doc?.orchestrator) candidates.push(doc.orchestrator)
-    for (const team of doc?.teams || []) {
-      if (team?.lead) candidates.push(team.lead)
-      for (const member of team?.members || []) candidates.push(member)
-    }
-
-    const matched = candidates.find((candidate) => normalizeAgentName(candidate?.id || "") === agent)
-    if (!matched?.expertise?.path) return undefined
-    return resolveFromRoot(root, matched.expertise.path)
-  } catch {
-    return undefined
-  }
-}
-
-function resolvePathFromActiveAgentPrompt(root: string, agent: string): string | undefined {
-  const promptPath = path.join(root, ".opencode", "agents", `${agent}.md`)
-  if (!existsSync(promptPath)) return undefined
-
-  try {
-    const prompt = readFileSync(promptPath, "utf-8")
-    const sectionMatch = prompt.match(/## Expertise[\s\S]*?- path: `([^`]+)`/)
-    if (!sectionMatch?.[1]) return undefined
-    return resolveFromRoot(root, sectionMatch[1])
-  } catch {
-    return undefined
-  }
-}
-
-function resolveExpertisePath(root: string, agent: string): string {
-  return (
-    resolvePathFromCrewConfig(root, agent) ||
-    resolvePathFromActiveAgentPrompt(root, agent) ||
-    path.join(root, ".opencode", "expertise", `${agent}-mental-model.yaml`)
-  )
-}
-
 function trimLines(doc: ExpertiseDoc): ExpertiseDoc {
   const clone = doc
   const preferred = ["observations", "open_questions"]
@@ -122,6 +54,30 @@ function trimLines(doc: ExpertiseDoc): ExpertiseDoc {
     rendered = YAML.stringify(clone)
   }
   return clone
+}
+
+function resolveExpertisePath(root: string, agent: string): string {
+  const activeMetaPath = path.join(root, ".opencode", ".active-crew.json")
+  if (existsSync(activeMetaPath)) {
+    try {
+      const active = JSON.parse(readFileSync(activeMetaPath, "utf-8")) as { crew?: string }
+      const crew = `${active?.crew || ""}`.trim()
+      if (crew) {
+        return path.join(root, ".opencode", "crew", crew, "expertise", `${agent}-mental-model.yaml`)
+      }
+    } catch {}
+  }
+
+  const activeAgentPrompt = path.join(root, ".opencode", "agents", `${agent}.md`)
+  if (existsSync(activeAgentPrompt)) {
+    const body = readFileSync(activeAgentPrompt, "utf-8")
+    const match = body.match(/\.opencode\/crew\/[^/\s]+\/expertise\/[a-z0-9_-]+-mental-model\.yaml/i)
+    if (match?.[0]) {
+      return path.join(root, match[0])
+    }
+  }
+
+  return path.join(root, ".opencode", "expertise", `${agent}-mental-model.yaml`)
 }
 
 export default tool({
@@ -174,11 +130,6 @@ export default tool({
     doc = trimLines(doc)
     writeFileSync(filePath, YAML.stringify(doc), "utf-8")
 
-    return {
-      status: "ok",
-      agent,
-      path: filePath,
-      category: key
-    }
+    return `ok agent=${agent} category=${key} path=${filePath}`
   }
 })

@@ -4,23 +4,16 @@ This directory contains an OpenCode-native scaffold for a three-layer multi-team
 
 ## Structure
 
-- `crew/dev/multi-team.yaml`: canonical dev crew topology
-- `crew/marketing/multi-team.yaml`: canonical marketing crew topology
+- `multi-team.yaml`: high-level canonical topology/config spec
 - `opencode.json`: OpenCode config (permissions + MCP servers)
-- `../opencode.example.json`: OpenCode config template (permissions + MCP servers)
-- `agents/`: active runtime agents (generated/materialized)
-- `crew/dev/agents/`: canonical dev crew agents
+- `agents/`: active runtime agent links/materialization for the selected crew
 - `skills/`: reusable behavior skills in `SKILL.md` format
 - `tools/`: custom tools callable by the model (`update-mental-model`)
-- `plugins/`: runtime hooks (optional session export, notifications, guards, etc.)
-- `crew/<crew>/expertise/`: per-crew expertise files
-- `crew/<crew>/sessions/`: optional JSONL export target per crew
+- `expertise/`: persistent YAML mental-model files per agent
 - `scripts/validate-multi-team.mjs`: validates topology + file references
 
-MCP servers are configured for documentation, web research, and design integration:
-
-- `brave-search` (requires `BRAVE_API_KEY`, package `@brave/brave-search-mcp-server`)
-- `firecrawl` (requires `FIRECRAWL_API_KEY`)
+ClickUp MCP is configured via local `mcp-remote` (`https://mcp.clickup.com/mcp`, callback port `19876`).
+First successful run performs OAuth and persists token in `~/.mcp-auth`.
 
 ## Install
 
@@ -34,7 +27,7 @@ Optional environment setup:
 
 ```bash
 cp .env.sample .env
-# then fill required values in .env (e.g. CONTEXT7_API_KEY, BRAVE_API_KEY, FIRECRAWL_API_KEY)
+# then fill required values in .env (e.g. CONTEXT7_API_KEY, GITHUB_PAT)
 ```
 
 Verify OpenCode CLI is available:
@@ -48,6 +41,22 @@ fi
 ```
 
 ## Get Started
+
+Sync crew configs from repository canonical source:
+
+```bash
+# from repo root
+npm run sync:meta
+# or from .opencode
+npm run sync:meta
+```
+
+This generates:
+
+- `.pi/crew/<crew>/multi-team.yaml`
+- `.claude/crew/<crew>/multi-team.yaml`
+- `.opencode/crew/<crew>/multi-team.yaml`
+- `.opencode/crew/<crew>/agents/*` and `.opencode/crew/<crew>/expertise/*`
 
 Generate/update all agent prompts from the canonical YAML:
 
@@ -67,46 +76,41 @@ Check drift (CI-friendly, no file writes):
 npm --prefix .opencode run check:multi-team-sync
 ```
 
-List available harness crews:
+Select crew and start OpenCode:
 
 ```bash
-npm --prefix .opencode run list:crews
+ocmh list:crews
+ocmh use dev
+ocmh use dev --hierarchy
+ocmh use dev --no-hierarchy
+ocmh run
+ocmh run --crew dev --no-hierarchy
+ocmh clear
 ```
 
-Activate one crew (example: `marketing`):
+`ocmh use <crew>` creates runtime symlinks:
+
+- `.opencode/multi-team.yaml -> .opencode/crew/<crew>/multi-team.yaml`
+- `.opencode/agents/*.md -> .opencode/crew/<crew>/agents/*.md`
+
+Optional hierarchy override:
+
+- `--hierarchy` keeps strict topology (`orchestrator -> leads -> workers`)
+- `--no-hierarchy` expands orchestrator `permission.task` to all agents for the active runtime materialization
+- works with both `ocmh use` and `ocmh run`
+
+Expertise behavior:
+
+- expertise remains per crew in `.opencode/crew/<crew>/expertise`
+- `update-mental-model` resolves path by active crew metadata first, then active agent prompt metadata
+- fallback legacy path `.opencode/expertise/<agent>-mental-model.yaml` remains only for compatibility
+
+`ocmh clear` removes these symlinks.
+
+If ClickUp OAuth session is broken, clear auth cache and retry:
 
 ```bash
-npm --prefix .opencode run use:crew -- marketing
-```
-
-Clear active crew selection (deprovision runtime agents):
-
-```bash
-npm --prefix .opencode run clear:crew
-```
-
-The command provisions active runtime links into:
-
-- `.opencode/agents/*.md`
-- `.opencode/.active-crew.json`
-
-Start OpenCode:
-
-```bash
-opencode
-```
-
-Enable Pi-like session export (optional):
-
-```bash
-OPENCODE_MULTI_SESSION_EXPORT=1 opencode
-```
-
-Optional custom export directory:
-
-```bash
-OPENCODE_MULTI_SESSION_EXPORT=1 \
-OPENCODE_MULTI_SESSION_DIR=.opencode/crew/dev/sessions \
+rm -rf ~/.mcp-auth
 opencode
 ```
 
@@ -121,26 +125,11 @@ Recommended start:
 - This scaffold is focused on OpenCode primitives:
   - Task tool permissions (`permission.task`)
   - custom tools under `.opencode/tools`
-  - plugin hooks under `.opencode/plugins`
   - skills under `.opencode/skills/*/SKILL.md`
   - MCP under `mcp` in `opencode.json`
-- Optional session export plugin:
-  - enabled only when `OPENCODE_MULTI_SESSION_EXPORT=1`
-  - writes sessions under active crew path, e.g. `.opencode/crew/dev/sessions/<session-id>/`
-  - writes child sessions to `crew/<crew>/sessions/<root-session-id>/children/<child-session-id>/`
-  - includes `events.jsonl`, `conversation.jsonl`, and `meta.json`
-- Multi-crew support:
-  - crew source folders live at `.opencode/crew/<crew>/`
-  - activate with `npm --prefix .opencode run use:crew -- <crew>`
-  - `sync`/`validate` also accept `--config`, `OPENCODE_MULTI_CREW_CONFIG` or `OPENCODE_MULTI_CONFIG`
 - Canonical authoring model:
-  - update `.opencode/crew/<crew>/multi-team.yaml` first (high level source-of-truth)
-  - activate crew with `npm --prefix .opencode run use:crew -- <crew>`
-  - run `npm --prefix .opencode run sync:multi-team`
-  - optionally run `npm --prefix .opencode run check:multi-team-sync` in CI
-  - run `npm --prefix .opencode run validate:multi-team`
-  - keep `opencode.json` aligned as runtime artifact
-- Root `agents/` is the runtime mount point and should remain present (at least with `.gitkeep`).
-- Runtime `agents/` files are provisioned by symlink.
-- `update-mental-model` writes to crew expertise by default (active crew config first), with fallback to legacy `.opencode/expertise/`.
-- Default OpenCode storage remains in `~/.local/share/opencode/`.
+  - update `meta-agents.yaml` first (single source-of-truth)
+  - run `npm run sync:meta`
+  - run `npm run check:meta-sync` in CI
+  - use `ocmh use <crew>` to switch OpenCode active crew
+- It does not yet replicate the full Pi widget/session runtime parity.

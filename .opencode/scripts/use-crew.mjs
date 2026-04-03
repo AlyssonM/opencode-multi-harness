@@ -1,191 +1,26 @@
-import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, statSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs"
-import path from "node:path"
-import { fileURLToPath } from "node:url"
-import YAML from "yaml"
-import { resolveRepoRoot, resolveRuntimeRoot } from "./lib/runtime.mjs"
+import { ensureCrewSelected, listCrews } from "./lib/crew-runtime.mjs"
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-const scriptRuntimeRoot = path.resolve(__dirname, "..")
-const defaultRepoRoot = path.resolve(scriptRuntimeRoot, "..")
-const opencodeRoot = resolveRuntimeRoot(defaultRepoRoot)
-const repoRoot = resolveRepoRoot(opencodeRoot)
-const crewRoot = path.join(opencodeRoot, "crew")
-
-const ACTIVE_META_PATH = path.join(opencodeRoot, ".active-crew.json")
-const ACTIVE_AGENTS_DIR = path.join(opencodeRoot, "agents")
-
-function safeDirectoryEntries(dirPath) {
-  if (!existsSync(dirPath)) return []
-  return readdirSync(dirPath).filter((entry) => {
-    const abs = path.join(dirPath, entry)
-    return statSync(abs).isDirectory()
-  })
+const argv = process.argv.slice(2)
+let noHierarchy = false
+for (const token of argv) {
+  if (token === "--no-hierarchy") noHierarchy = true
+  if (token === "--hierarchy") noHierarchy = false
 }
-
-function listCrewCandidates() {
-  const crews = []
-  for (const entry of safeDirectoryEntries(crewRoot)) {
-    const configPath = path.join(crewRoot, entry, "multi-team.yaml")
-    if (!existsSync(configPath)) continue
-    crews.push({
-      name: entry,
-      key: entry,
-      root: path.join(crewRoot, entry),
-      configPath
-    })
-  }
-  return crews.sort((a, b) => a.name.localeCompare(b.name))
-}
-
-function resolveFromRepo(filePath) {
-  if (path.isAbsolute(filePath)) return filePath
-  return path.resolve(repoRoot, filePath)
-}
-
-function clearDirectoryByRule(dirPath, shouldDelete) {
-  if (!existsSync(dirPath)) return
-  for (const entry of readdirSync(dirPath)) {
-    const abs = path.join(dirPath, entry)
-    const stat = lstatSync(abs)
-    if (!stat.isFile() && !stat.isSymbolicLink()) continue
-    if (!shouldDelete(entry)) continue
-    unlinkSync(abs)
-  }
-}
-
-function ensureDir(dirPath) {
-  if (!existsSync(dirPath)) mkdirSync(dirPath, { recursive: true })
-}
-
-function linkAgentFile(sourcePath, targetPath) {
-  const relativeTarget = path.relative(path.dirname(targetPath), sourcePath)
-  symlinkSync(relativeTarget, targetPath)
-}
-
-function collectAgents(doc) {
-  const rows = []
-  rows.push({ agent: doc.orchestrator, teamName: "Global" })
-  for (const team of doc.teams || []) {
-    rows.push({ agent: team.lead, teamName: team.name || "Global" })
-    for (const member of team.members || []) {
-      rows.push({ agent: member, teamName: team.name || "Global" })
-    }
-  }
-  return rows
-}
-
-function buildExpertiseSkeleton(agent, teamName) {
-  return {
-    agent: {
-      name: agent.id,
-      role: agent.role || "worker",
-      team: teamName || "Global"
-    },
-    meta: {
-      version: 1,
-      max_lines: 10000,
-      last_updated: new Date().toISOString()
-    },
-    observations: [],
-    open_questions: []
-  }
-}
-
-function fail(message) {
-  console.error(`ERROR: ${message}`)
+const crew = `${argv.find((item) => !item.startsWith("--")) || ""}`.trim()
+if (!crew) {
+  console.error("ERROR: missing crew name. Usage: ocmh use <crew> [--hierarchy|--no-hierarchy]")
   process.exitCode = 1
-}
-
-function main() {
-  const crews = listCrewCandidates()
-  const crewArg = process.argv[2]
-
-  if (!crewArg) {
-    console.log("Usage: ocmh use <crew>")
-    console.log("")
+} else {
+  const crews = listCrews()
+  if (!crews.includes(crew)) {
+    console.error(`ERROR: crew not found: ${crew}`)
     console.log("Available crews:")
-    for (const crew of crews) console.log(`- ${crew.name}`)
+    for (const item of crews) console.log(`- ${item}`)
     process.exitCode = 1
-    return
+  } else if (!ensureCrewSelected(crew, { noHierarchy })) {
+    console.error(`ERROR: failed to activate crew: ${crew}`)
+    process.exitCode = 1
+  } else {
+    console.log(`Active OpenCode crew: ${crew}${noHierarchy ? " (no-hierarchy)" : ""}`)
   }
-
-  const selected = crews.find((crew) => crew.name === crewArg || crew.key === crewArg)
-  if (!selected) {
-    fail(`crew not found: ${crewArg}`)
-    console.log("Available crews:")
-    for (const crew of crews) console.log(`- ${crew.name}`)
-    return
-  }
-
-  const raw = readFileSync(selected.configPath, "utf-8")
-  const doc = YAML.parse(raw)
-  if (!doc?.orchestrator || !Array.isArray(doc?.teams)) {
-    fail(`invalid crew config: ${path.relative(repoRoot, selected.configPath)}`)
-    return
-  }
-
-  const agents = collectAgents(doc)
-  ensureDir(ACTIVE_AGENTS_DIR)
-  clearDirectoryByRule(ACTIVE_AGENTS_DIR, (entry) => entry.endsWith(".md"))
-
-  for (const row of agents) {
-    const agent = row.agent
-    if (!agent?.id) {
-      fail("agent missing id in selected crew")
-      return
-    }
-    if (!agent?.agent_file) {
-      fail(`agent ${agent.id} missing agent_file in selected crew`)
-      return
-    }
-    if (!agent?.expertise?.path) {
-      fail(`agent ${agent.id} missing expertise.path in selected crew`)
-      return
-    }
-
-    const sourceAgentPath = resolveFromRepo(agent.agent_file)
-    if (!existsSync(sourceAgentPath)) {
-      fail(`agent file not found for ${agent.id}: ${agent.agent_file}`)
-      return
-    }
-
-    const sourceExpertisePath = resolveFromRepo(agent.expertise.path)
-    ensureDir(path.dirname(sourceExpertisePath))
-    if (!existsSync(sourceExpertisePath)) {
-      writeFileSync(sourceExpertisePath, YAML.stringify(buildExpertiseSkeleton(agent, row.teamName)), "utf-8")
-    }
-
-    const activeAgentPath = path.join(ACTIVE_AGENTS_DIR, `${agent.id}.md`)
-    linkAgentFile(sourceAgentPath, activeAgentPath)
-  }
-
-  writeFileSync(
-    ACTIVE_META_PATH,
-    `${JSON.stringify(
-      {
-        crew: selected.name,
-        source_config: path.relative(repoRoot, selected.configPath),
-        activated_at: new Date().toISOString(),
-        note: "Generated by use-crew.mjs. Active agents were symlinked into .opencode/agents; expertise remains crew-scoped."
-      },
-      null,
-      2
-    )}\n`,
-    "utf-8"
-  )
-
-  console.log(`Activated crew: ${selected.name}`)
-  console.log(`- source config: ${path.relative(repoRoot, selected.configPath)}`)
-  console.log(`- active metadata: ${path.relative(repoRoot, ACTIVE_META_PATH)}`)
-  console.log(`- agents linked: ${agents.length} -> .opencode/agents`)
-  console.log(`- expertise scope: ${path.relative(repoRoot, path.join(selected.root, "expertise"))}`)
-  console.log("")
-  console.log("Next:")
-  const suggestedSessionDir = path.relative(repoRoot, path.join(selected.root, "sessions"))
-  console.log("- ocmh validate")
-  console.log("- ocmh check:sync")
-  console.log(`- OPENCODE_MULTI_SESSION_EXPORT=1 OPENCODE_MULTI_SESSION_DIR=${suggestedSessionDir} opencode`)
 }
-
-main()

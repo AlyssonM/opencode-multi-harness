@@ -28,43 +28,29 @@
       "enabled": true,
       "timeout": 60000
     },
-    "brave-search": {
+    "clickup": {
       "type": "local",
       "command": [
         "npx",
         "-y",
-        "@brave/brave-search-mcp-server"
+        "mcp-remote",
+        "https://mcp.clickup.com/mcp",
+        "19876"
       ],
-      "environment": {
-        "BRAVE_API_KEY": "{env:BRAVE_API_KEY}"
-      },
-      "enabled": true,
-      "timeout": 60000
-    },
-    "firecrawl": {
-      "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "firecrawl-mcp"
-      ],
-      "environment": {
-        "FIRECRAWL_API_KEY": "{env:FIRECRAWL_API_KEY}"
-      },
       "enabled": true,
       "timeout": 120000
     },
-    "zeplin": {
-      "enabled": true,
+    "github": {
       "type": "local",
       "command": [
-        "npx",
-        "-y",
-        "@zeplin/mcp-server@latest"
+        "/usr/bin/github-mcp-server",
+        "stdio"
       ],
       "environment": {
-        "ZEPLIN_ACCESS_TOKEN": "{env:ZEPLIN_ACCESS_TOKEN}"
-      }
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "{env:GITHUB_PAT}",
+        "GITHUB_TOOLSETS": "repos,issues,pull_requests"
+      },
+      "enabled": true
     }
   }
 }

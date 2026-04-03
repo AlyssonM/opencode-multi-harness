@@ -1,50 +1,19 @@
-import { existsSync, lstatSync, readdirSync, unlinkSync } from "node:fs"
+import { existsSync, rmSync } from "node:fs"
 import path from "node:path"
-import { fileURLToPath } from "node:url"
-import { resolveRepoRoot, resolveRuntimeRoot } from "./lib/runtime.mjs"
+import { activeMetaPath, clearCrewSelection, opencodeRoot } from "./lib/crew-runtime.mjs"
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-const scriptRuntimeRoot = path.resolve(__dirname, "..")
-const defaultRepoRoot = path.resolve(scriptRuntimeRoot, "..")
-const opencodeRoot = resolveRuntimeRoot(defaultRepoRoot)
-const repoRoot = resolveRepoRoot(opencodeRoot)
-
-const ACTIVE_AGENTS_DIR = path.join(opencodeRoot, "agents")
-const ACTIVE_CREW_META_PATH = path.join(opencodeRoot, ".active-crew.json")
-const LEGACY_ACTIVE_PACK_META_PATH = path.join(opencodeRoot, ".active-pack.json")
-
-function clearActiveAgents() {
-  if (!existsSync(ACTIVE_AGENTS_DIR)) return 0
-  let removed = 0
-  for (const entry of readdirSync(ACTIVE_AGENTS_DIR)) {
-    const abs = path.join(ACTIVE_AGENTS_DIR, entry)
-    const stat = lstatSync(abs)
-    if (!stat.isFile() && !stat.isSymbolicLink()) continue
-    if (!entry.endsWith(".md")) continue
-    unlinkSync(abs)
-    removed += 1
+if (
+  existsSync(activeMetaPath) ||
+  existsSync(path.join(opencodeRoot, "agents")) ||
+  existsSync(path.join(opencodeRoot, "expertise")) ||
+  existsSync(path.join(opencodeRoot, "multi-team.yaml"))
+) {
+  clearCrewSelection()
+  const legacyExpertisePath = path.join(opencodeRoot, "expertise")
+  if (existsSync(legacyExpertisePath)) {
+    rmSync(legacyExpertisePath, { recursive: true, force: true })
   }
-  return removed
+  console.log("Cleared active OpenCode crew selection and runtime symlinks.")
+} else {
+  console.log("No active OpenCode crew selection.")
 }
-
-function removeIfExists(filePath) {
-  if (!existsSync(filePath)) return false
-  unlinkSync(filePath)
-  return true
-}
-
-function main() {
-  const removedAgents = clearActiveAgents()
-  const removedCrewMeta = removeIfExists(ACTIVE_CREW_META_PATH)
-  const removedLegacyPackMeta = removeIfExists(LEGACY_ACTIVE_PACK_META_PATH)
-
-  console.log("Cleared active crew selection")
-  console.log(`- agents removed: ${removedAgents} from ${path.relative(repoRoot, ACTIVE_AGENTS_DIR)}`)
-  console.log(`- metadata removed: ${removedCrewMeta ? path.relative(repoRoot, ACTIVE_CREW_META_PATH) : "none"}`)
-  if (removedLegacyPackMeta) {
-    console.log(`- legacy metadata removed: ${path.relative(repoRoot, LEGACY_ACTIVE_PACK_META_PATH)}`)
-  }
-}
-
-main()

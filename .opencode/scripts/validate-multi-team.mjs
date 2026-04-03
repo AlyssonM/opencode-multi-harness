@@ -2,14 +2,36 @@ import { existsSync, readFileSync } from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import YAML from "yaml"
-import { resolveRepoRoot, resolveRuntimeRoot } from "./lib/runtime.mjs"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
-const scriptRuntimeRoot = path.resolve(__dirname, "..")
-const defaultRepoRoot = path.resolve(scriptRuntimeRoot, "..")
-const opencodeRoot = resolveRuntimeRoot(defaultRepoRoot)
-const repoRoot = resolveRepoRoot(opencodeRoot)
+const opencodeRoot = path.resolve(__dirname, "..")
+const repoRoot = path.resolve(opencodeRoot, "..")
+
+function parseConfigArg(argv) {
+  for (let i = 0; i < argv.length; i += 1) {
+    const token = argv[i]
+    if (token === "--config" && argv[i + 1]) return argv[i + 1]
+    if (token.startsWith("--config=")) return token.slice("--config=".length)
+  }
+  return ""
+}
+
+function resolveConfigPath() {
+  const argPath = parseConfigArg(process.argv.slice(2))
+  const envPath = process.env.OPENCODE_MULTI_CREW_CONFIG || process.env.OPENCODE_MULTI_CONFIG || ""
+  const activeMetaPath = path.join(opencodeRoot, ".active-crew.json")
+  let activeSource = ""
+  if (existsSync(activeMetaPath)) {
+    try {
+      const active = JSON.parse(readFileSync(activeMetaPath, "utf-8"))
+      activeSource = `${active?.source_config || ""}`.trim()
+    } catch {}
+  }
+
+  const candidate = argPath || envPath || activeSource || path.join(opencodeRoot, "multi-team.yaml")
+  return path.isAbsolute(candidate) ? candidate : path.resolve(repoRoot, candidate)
+}
 
 function fail(message) {
   console.error(`ERROR: ${message}`)
@@ -23,39 +45,6 @@ function ok(message) {
 function resolveFromRepo(filePath) {
   if (path.isAbsolute(filePath)) return filePath
   return path.resolve(repoRoot, filePath)
-}
-
-function resolveActiveConfigFromMetadata() {
-  const activeCrewPath = path.join(opencodeRoot, ".active-crew.json")
-  const activeMetaPath = activeCrewPath
-  if (!existsSync(activeMetaPath)) return undefined
-  try {
-    const active = YAML.parse(readFileSync(activeMetaPath, "utf-8"))
-    if (typeof active?.source_config !== "string") return undefined
-    return resolveFromRepo(active.source_config)
-  } catch {
-    return undefined
-  }
-}
-
-function cliArgValue(flag) {
-  const index = process.argv.indexOf(flag)
-  if (index === -1) return undefined
-  return process.argv[index + 1]
-}
-
-function resolveConfigPath() {
-  const fromCli = cliArgValue("--config")
-  if (fromCli && fromCli.startsWith("--")) {
-    throw new Error("Expected value after --config")
-  }
-  const configured =
-    fromCli ||
-    process.env.OPENCODE_MULTI_CREW_CONFIG ||
-    process.env.OPENCODE_MULTI_CONFIG ||
-    resolveActiveConfigFromMetadata() ||
-    ".opencode/crew/dev/multi-team.yaml"
-  return resolveFromRepo(configured)
 }
 
 function assertFileExists(filePath, label) {
@@ -173,7 +162,7 @@ function main() {
 
   if (process.exitCode) return
 
-  ok(`parsed ${path.relative(repoRoot, configPath)}`)
+  ok(`parsed .opencode/multi-team.yaml`)
   ok(`validated ${agents.size} unique agents`)
   ok(`validated topology routes (orchestrator -> leads, leads -> members)`)
   ok(`validated referenced files (agents, expertise, skills)`)

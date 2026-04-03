@@ -2,14 +2,12 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import YAML from "yaml"
-import { resolveRepoRoot, resolveRuntimeRoot } from "./lib/runtime.mjs"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
-const scriptRuntimeRoot = path.resolve(__dirname, "..")
-const defaultRepoRoot = path.resolve(scriptRuntimeRoot, "..")
-const opencodeRoot = resolveRuntimeRoot(defaultRepoRoot)
-const repoRoot = resolveRepoRoot(opencodeRoot)
+const opencodeRoot = path.resolve(__dirname, "..")
+const repoRoot = path.resolve(opencodeRoot, "..")
+const configPath = path.join(opencodeRoot, "multi-team.yaml")
 
 function titleFromId(id) {
   return id
@@ -22,39 +20,6 @@ function titleFromId(id) {
 function resolvePath(filePath) {
   if (path.isAbsolute(filePath)) return filePath
   return path.resolve(repoRoot, filePath)
-}
-
-function resolveActiveConfigFromMetadata() {
-  const activeCrewPath = path.join(opencodeRoot, ".active-crew.json")
-  const activeMetaPath = activeCrewPath
-  if (!existsSync(activeMetaPath)) return undefined
-  try {
-    const active = YAML.parse(readFileSync(activeMetaPath, "utf-8"))
-    if (typeof active?.source_config !== "string") return undefined
-    return resolvePath(active.source_config)
-  } catch {
-    return undefined
-  }
-}
-
-function cliArgValue(flag) {
-  const index = process.argv.indexOf(flag)
-  if (index === -1) return undefined
-  return process.argv[index + 1]
-}
-
-function resolveConfigPath() {
-  const fromCli = cliArgValue("--config")
-  if (fromCli && fromCli.startsWith("--")) {
-    throw new Error("Expected value after --config")
-  }
-  const configured =
-    fromCli ||
-    process.env.OPENCODE_MULTI_CREW_CONFIG ||
-    process.env.OPENCODE_MULTI_CONFIG ||
-    resolveActiveConfigFromMetadata() ||
-    ".opencode/crew/dev/multi-team.yaml"
-  return resolvePath(configured)
 }
 
 function colorFor(agentId, teamName, role) {
@@ -234,11 +199,10 @@ function collectAgents(doc) {
 
 function main() {
   const checkOnly = process.argv.includes("--check")
-  const configPath = resolveConfigPath()
   const raw = readFileSync(configPath, "utf-8")
   const doc = YAML.parse(raw)
   if (!doc?.orchestrator || !Array.isArray(doc?.teams)) {
-    throw new Error(`Invalid config at ${path.relative(repoRoot, configPath)}: missing orchestrator or teams.`)
+    throw new Error("Invalid `.opencode/multi-team.yaml`: missing orchestrator or teams.")
   }
 
   const agents = collectAgents(doc)
@@ -275,7 +239,7 @@ function main() {
 
   if (checkOnly) {
     if (drift) {
-      console.log("multi-team sync check failed: run `ocmh sync`")
+      console.log("multi-team sync check failed: run `npm --prefix .opencode run sync:multi-team`")
       process.exitCode = 1
       return
     }
@@ -283,7 +247,7 @@ function main() {
     return
   }
 
-  console.log(`synced ${agents.length} agent files from ${path.relative(repoRoot, configPath)}`)
+  console.log(`synced ${agents.length} agent files from .opencode/multi-team.yaml`)
 }
 
 main()
