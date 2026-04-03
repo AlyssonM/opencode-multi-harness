@@ -1,6 +1,8 @@
 {
-  "name": "multi-agents-opencode",
+  "name": "opencode-multi-harness",
+  "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "bin": {
     "ocmh": "bin/ocmh"

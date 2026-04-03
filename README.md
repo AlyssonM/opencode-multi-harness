@@ -98,8 +98,8 @@ Brave Search MCP uses the official package `@brave/brave-search-mcp-server`.
 ## Install
 
 ```bash
-git clone https://github.com/AlyssonM/multi-agents.git
-cd multi-agents
+git clone https://github.com/AlyssonM/opencode-multi-harness.git
+cd opencode-multi-harness
 npm --prefix .opencode install
 npm --prefix .opencode run ocmh:install
 ```
